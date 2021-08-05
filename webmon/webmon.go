@@ -2,7 +2,6 @@ package webmon
 
 import (
 	"context"
-	"crypto/x509"
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"net/http"
@@ -13,7 +12,6 @@ import (
 
 type Monitor struct {
 	HTTPClient    *http.Client
-	RootCAs       *x509.CertPool
 	sites         map[*url.URL]Entry
 	lock          sync.RWMutex
 	metricUp      *prometheus.Desc

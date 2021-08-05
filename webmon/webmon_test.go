@@ -2,7 +2,6 @@ package webmon_test
 
 import (
 	"context"
-	"crypto/x509"
 	"github.com/clambin/webmon/webmon"
 	"github.com/prometheus/client_golang/prometheus"
 	pcg "github.com/prometheus/client_model/go"
@@ -77,10 +76,6 @@ func TestCollector_Collect_TLS(t *testing.T) {
 	assert.NoError(t, err)
 	// allow the client to recognize the server during HTTPS TLS handshake
 	monitor.HTTPClient = testServer.Client()
-	// allow the client to recognize the server during tls.Dial TSL handshake
-	pool := x509.NewCertPool()
-	pool.AddCert(testServer.Certificate())
-	monitor.RootCAs = pool
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -120,10 +115,6 @@ func TestCollector_Collect_StatusCodes(t *testing.T) {
 	assert.NoError(t, err)
 	// allow the client to recognize the server during HTTPS TLS handshake
 	monitor.HTTPClient = testServer.Client()
-	// allow the client to recognize the server during tls.Dial TSL handshake
-	pool := x509.NewCertPool()
-	pool.AddCert(testServer.Certificate())
-	monitor.RootCAs = pool
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -168,15 +159,11 @@ func BenchmarkMonitor_CheckSites(b *testing.B) {
 	assert.NoError(b, err)
 	// allow the client to recognize the server during HTTPS TLS handshake
 	monitor.HTTPClient = testServer.Client()
-	// allow the client to recognize the server during tls.Dial TSL handshake
-	pool := x509.NewCertPool()
-	pool.AddCert(testServer.Certificate())
-	monitor.RootCAs = pool
 
 	ctx := context.Background()
 	b.ResetTimer()
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 5000; i++ {
 		monitor.CheckSites(ctx)
 	}
 
