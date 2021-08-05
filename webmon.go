@@ -53,7 +53,7 @@ func main() {
 	log.WithField("hosts", *hosts).Infof("webmon %s", version.BuildVersion)
 
 	var monitor *webmon.Monitor
-	monitor, err = webmon.New(*hosts)
+	monitor = webmon.New(*hosts)
 	prometheus.MustRegister(monitor)
 
 	ctx, cancel := context.WithCancel(context.Background())

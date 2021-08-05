@@ -20,9 +20,9 @@ func (monitor *Monitor) Collect(ch chan<- prometheus.Metric) {
 			if entry.Up {
 				up = 1.0
 			}
-			ch <- prometheus.MustNewConstMetric(monitor.metricUp, prometheus.GaugeValue, up, name.String())
-			ch <- prometheus.MustNewConstMetric(monitor.metricLatency, prometheus.GaugeValue, entry.Latency.Seconds(), name.String())
-			ch <- prometheus.MustNewConstMetric(monitor.metricCertAge, prometheus.GaugeValue, entry.CertificateAge, name.String())
+			ch <- prometheus.MustNewConstMetric(monitor.metricUp, prometheus.GaugeValue, up, name)
+			ch <- prometheus.MustNewConstMetric(monitor.metricLatency, prometheus.GaugeValue, entry.Latency.Seconds(), name)
+			ch <- prometheus.MustNewConstMetric(monitor.metricCertAge, prometheus.GaugeValue, entry.CertificateAge, name)
 		}
 	}
 }

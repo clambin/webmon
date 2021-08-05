@@ -2,10 +2,8 @@ package webmon
 
 import (
 	"context"
-	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"net/http"
-	"net/url"
 	"sync"
 	"time"
 )
@@ -21,7 +19,7 @@ type Monitor struct {
 	HTTPClient *http.Client
 	// MaxConcurrentChecks limits the number of sites that are checked in parallel. Default: DefaultMaxConcurrentChecks
 	MaxConcurrentChecks int64
-	sites               map[*url.URL]Entry
+	sites               map[string]Entry
 	lock                sync.RWMutex
 	metricUp            *prometheus.Desc
 	metricLatency       *prometheus.Desc
@@ -42,19 +40,7 @@ type Entry struct {
 }
 
 // New creates a new Monitor instance for the specified list of sites
-func New(hosts []string) (monitor *Monitor, err error) {
-	sites := make(map[*url.URL]Entry)
-
-	for _, host := range hosts {
-		var parsedURL *url.URL
-		parsedURL, err = url.Parse(host)
-
-		if err != nil {
-			return nil, fmt.Errorf("invalid URL '%s': %v", host, err)
-		}
-		sites[parsedURL] = Entry{}
-	}
-
+func New(hosts []string) (monitor *Monitor) {
 	monitor = &Monitor{
 		HTTPClient: &http.Client{
 			Timeout: 10 * time.Second,
@@ -62,7 +48,7 @@ func New(hosts []string) (monitor *Monitor, err error) {
 				return http.ErrUseLastResponse
 			},
 		},
-		sites: sites,
+		sites: make(map[string]Entry),
 		metricUp: prometheus.NewDesc(
 			prometheus.BuildFQName("webmon", "site", "up"),
 			"Set to 1 if the site is up",
@@ -81,6 +67,10 @@ func New(hosts []string) (monitor *Monitor, err error) {
 			[]string{"site_url"},
 			nil,
 		),
+	}
+
+	for _, host := range hosts {
+		monitor.sites[host] = Entry{}
 	}
 
 	return

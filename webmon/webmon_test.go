@@ -15,7 +15,7 @@ import (
 )
 
 func TestCollector_Describe(t *testing.T) {
-	monitor, _ := webmon.New([]string{"localhost"})
+	monitor := webmon.New([]string{"localhost"})
 
 	metrics := make(chan *prometheus.Desc)
 	go monitor.Describe(metrics)
@@ -35,8 +35,7 @@ func TestCollector_Collect(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(stub.Handle))
 	defer testServer.Close()
 
-	monitor, err := webmon.New([]string{testServer.URL})
-	assert.NoError(t, err)
+	monitor := webmon.New([]string{testServer.URL})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -72,8 +71,7 @@ func TestCollector_Collect_TLS(t *testing.T) {
 	testServer := httptest.NewTLSServer(http.HandlerFunc(stub.Handle))
 	defer testServer.Close()
 
-	monitor, err := webmon.New([]string{testServer.URL})
-	assert.NoError(t, err)
+	monitor := webmon.New([]string{testServer.URL})
 	// allow the client to recognize the server during HTTPS TLS handshake
 	monitor.HTTPClient = testServer.Client()
 
@@ -111,8 +109,7 @@ func TestCollector_Collect_StatusCodes(t *testing.T) {
 	testServer := httptest.NewTLSServer(http.HandlerFunc(stub.Handle))
 	defer testServer.Close()
 
-	monitor, err := webmon.New([]string{testServer.URL})
-	assert.NoError(t, err)
+	monitor := webmon.New([]string{testServer.URL})
 	// allow the client to recognize the server during HTTPS TLS handshake
 	monitor.HTTPClient = testServer.Client()
 
@@ -155,8 +152,7 @@ func BenchmarkMonitor_CheckSites(b *testing.B) {
 	testServer := httptest.NewTLSServer(http.HandlerFunc(stub.Handle))
 	defer testServer.Close()
 
-	monitor, err := webmon.New([]string{testServer.URL})
-	assert.NoError(b, err)
+	monitor := webmon.New([]string{testServer.URL})
 	// allow the client to recognize the server during HTTPS TLS handshake
 	monitor.HTTPClient = testServer.Client()
 
@@ -179,8 +175,7 @@ func BenchmarkMonitor_Parallel(b *testing.B) {
 		urls = append(urls, testServer.URL)
 	}
 
-	monitor, err := webmon.New(urls)
-	assert.NoError(b, err)
+	monitor := webmon.New(urls)
 	// monitor.MaxConcurrentChecks = 3
 
 	ctx := context.Background()

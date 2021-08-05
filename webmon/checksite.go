@@ -5,7 +5,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/semaphore"
 	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -20,12 +19,12 @@ func (monitor *Monitor) CheckSites(ctx context.Context) {
 	}
 	maxJobs := semaphore.NewWeighted(monitor.MaxConcurrentChecks)
 
-	responses := make(map[*url.URL]chan Entry)
+	responses := make(map[string]chan Entry)
 	for site := range monitor.sites {
 		responses[site] = make(chan Entry)
 
 		_ = maxJobs.Acquire(ctx, 1)
-		go func(ch chan Entry, site *url.URL) {
+		go func(ch chan Entry, site string) {
 			entry := monitor.checkSite(ctx, site)
 			maxJobs.Release(1)
 			ch <- entry
@@ -37,10 +36,10 @@ func (monitor *Monitor) CheckSites(ctx context.Context) {
 	}
 }
 
-func (monitor *Monitor) checkSite(ctx context.Context, site *url.URL) (entry Entry) {
+func (monitor *Monitor) checkSite(ctx context.Context, site string) (entry Entry) {
 	log.WithField("site", site).Debug("checking site")
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, site.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, site, nil)
 
 	if err == nil {
 		var resp *http.Response
@@ -62,7 +61,7 @@ func (monitor *Monitor) checkSite(ctx context.Context, site *url.URL) (entry Ent
 	entry.LastCheck = time.Now()
 
 	log.WithError(err).WithFields(log.Fields{
-		"site":    site.String(),
+		"site":    site,
 		"up":      entry.Up,
 		"certAge": entry.CertificateAge,
 	}).Debug("checkSite")
