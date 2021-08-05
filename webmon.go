@@ -36,8 +36,15 @@ func main() {
 	_, err := a.Parse(os.Args[1:])
 	if err != nil {
 		a.Usage(os.Args[1:])
+		os.Exit(1)
+	}
+
+	if len(*hosts) == 0 {
+		log.Error("No hosts specified. Aborting")
 		os.Exit(2)
 	}
+
+	*hosts = webmon.Unique(*hosts)
 
 	if debug {
 		log.SetLevel(log.DebugLevel)
