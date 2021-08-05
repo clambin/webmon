@@ -6,6 +6,7 @@ import (
 	"github.com/clambin/webmon/webmon"
 	"github.com/prometheus/client_golang/prometheus"
 	pcg "github.com/prometheus/client_model/go"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -29,7 +30,6 @@ func TestCollector_Describe(t *testing.T) {
 		assert.Contains(t, metric.String(), "\""+name+"\"")
 	}
 }
-
 
 func TestCollector_Collect(t *testing.T) {
 	stub := &serverStub{}
@@ -57,20 +57,21 @@ func TestCollector_Collect(t *testing.T) {
 	ch := make(chan prometheus.Metric)
 	go monitor.Collect(ch)
 
-	m := <- ch
+	m := <-ch
 	assert.Equal(t, 1.0, metricValue(m).GetGauge().GetValue())
-	m = <- ch
+	m = <-ch
 	assert.Less(t, metricValue(m).GetGauge().GetValue(), 0.1)
-	m = <- ch
+	m = <-ch
 	assert.NotZero(t, metricValue(m).GetGauge().GetValue())
 
 	cancel()
 
-	time.Sleep(100*time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 }
 
 func TestCollector_Collect_StatusCodes(t *testing.T) {
+	log.SetLevel(log.DebugLevel)
 	stub := &serverStub{}
 	testServer := httptest.NewTLSServer(http.HandlerFunc(stub.Handle))
 	defer testServer.Close()
@@ -92,15 +93,15 @@ func TestCollector_Collect_StatusCodes(t *testing.T) {
 		assert.NoError(t, err2)
 	}()
 
-	type testCaseStruct struct{
+	type testCaseStruct struct {
 		statusCode int
 		up         float64
 	}
 
 	testCases := []testCaseStruct{
-		{ statusCode: http.StatusOK, up: 1.0 },
-		{ statusCode: http.StatusNotFound, up: 0.0 },
-		{ statusCode: http.StatusTemporaryRedirect, up: 1.0 },
+		{statusCode: http.StatusOK, up: 1.0},
+		{statusCode: http.StatusNotFound, up: 0.0},
+		{statusCode: http.StatusTemporaryRedirect, up: 1.0},
 	}
 
 	for _, testCase := range testCases {
@@ -116,6 +117,29 @@ func TestCollector_Collect_StatusCodes(t *testing.T) {
 			return metricValue(m).GetGauge().GetValue() == testCase.up
 		}, 500*time.Millisecond, 25*time.Millisecond)
 	}
+}
+
+func BenchmarkMonitor_CheckSites(b *testing.B) {
+	stub := &serverStub{}
+	testServer := httptest.NewTLSServer(http.HandlerFunc(stub.Handle))
+	defer testServer.Close()
+
+	monitor, err := webmon.New([]string{testServer.URL})
+	assert.NoError(b, err)
+	// allow the client to recognize the server during HTTPS TLS handshake
+	monitor.HTTPClient = testServer.Client()
+	// allow the client to recognize the server during tls.Dial TSL handshake
+	pool := x509.NewCertPool()
+	pool.AddCert(testServer.Certificate())
+	monitor.RootCAs = pool
+
+	ctx := context.Background()
+	b.ResetTimer()
+
+	for i := 0; i < 100; i++ {
+		monitor.CheckSites(ctx)
+	}
+
 }
 
 type serverStub struct {
