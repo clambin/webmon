@@ -33,6 +33,42 @@ func TestCollector_Describe(t *testing.T) {
 
 func TestCollector_Collect(t *testing.T) {
 	stub := &serverStub{}
+	testServer := httptest.NewServer(http.HandlerFunc(stub.Handle))
+	defer testServer.Close()
+
+	monitor, err := webmon.New([]string{testServer.URL})
+	assert.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	monitor.CheckSites(ctx)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		err2 := monitor.Run(ctx, 1*time.Minute)
+		assert.NoError(t, err2)
+		wg.Done()
+	}()
+
+	ch := make(chan prometheus.Metric)
+	go monitor.Collect(ch)
+
+	m := <-ch
+	assert.Equal(t, 1.0, metricValue(m).GetGauge().GetValue())
+	m = <-ch
+	assert.Less(t, metricValue(m).GetGauge().GetValue(), 0.1)
+	m = <-ch
+	assert.Zero(t, metricValue(m).GetGauge().GetValue())
+
+	cancel()
+
+	wg.Wait()
+}
+
+func TestCollector_Collect_TLS(t *testing.T) {
+	stub := &serverStub{}
 	testServer := httptest.NewTLSServer(http.HandlerFunc(stub.Handle))
 	defer testServer.Close()
 
@@ -49,9 +85,13 @@ func TestCollector_Collect(t *testing.T) {
 	defer cancel()
 
 	monitor.CheckSites(ctx)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
 		err2 := monitor.Run(ctx, 1*time.Minute)
 		assert.NoError(t, err2)
+		wg.Done()
 	}()
 
 	ch := make(chan prometheus.Metric)
@@ -66,8 +106,7 @@ func TestCollector_Collect(t *testing.T) {
 
 	cancel()
 
-	time.Sleep(100 * time.Millisecond)
-
+	wg.Wait()
 }
 
 func TestCollector_Collect_StatusCodes(t *testing.T) {
@@ -89,7 +128,7 @@ func TestCollector_Collect_StatusCodes(t *testing.T) {
 	defer cancel()
 
 	go func() {
-		err2 := monitor.Run(ctx, 50*time.Millisecond)
+		err2 := monitor.Run(ctx, 10*time.Millisecond)
 		assert.NoError(t, err2)
 	}()
 
@@ -115,7 +154,7 @@ func TestCollector_Collect_StatusCodes(t *testing.T) {
 			_ = <-ch
 			_ = <-ch
 			return metricValue(m).GetGauge().GetValue() == testCase.up
-		}, 500*time.Millisecond, 25*time.Millisecond)
+		}, 500*time.Millisecond, 10*time.Millisecond)
 	}
 }
 
@@ -136,7 +175,7 @@ func BenchmarkMonitor_CheckSites(b *testing.B) {
 	ctx := context.Background()
 	b.ResetTimer()
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		monitor.CheckSites(ctx)
 	}
 
