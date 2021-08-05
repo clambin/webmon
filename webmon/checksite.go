@@ -3,10 +3,39 @@ package webmon
 import (
 	"context"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/sync/semaphore"
 	"net/http"
 	"net/url"
 	"time"
 )
+
+// CheckSites checks each site. The site's status isn't reported here, but is kept internally to be scraped by Prometheus
+// using the Collect function.
+func (monitor *Monitor) CheckSites(ctx context.Context) {
+	monitor.lock.Lock()
+	defer monitor.lock.Unlock()
+
+	if monitor.MaxConcurrentChecks == 0 {
+		monitor.MaxConcurrentChecks = DefaultMaxConcurrentChecks
+	}
+	maxJobs := semaphore.NewWeighted(monitor.MaxConcurrentChecks)
+
+	responses := make(map[*url.URL]chan Entry)
+	for site := range monitor.sites {
+		responses[site] = make(chan Entry)
+
+		_ = maxJobs.Acquire(ctx, 1)
+		go func(ch chan Entry, site *url.URL) {
+			entry := monitor.checkSite(ctx, site)
+			maxJobs.Release(1)
+			ch <- entry
+		}(responses[site], site)
+	}
+
+	for site, ch := range responses {
+		monitor.sites[site] = <-ch
+	}
+}
 
 func (monitor *Monitor) checkSite(ctx context.Context, site *url.URL) (entry Entry) {
 	log.WithField("site", site).Debug("checking site")

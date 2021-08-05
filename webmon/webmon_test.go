@@ -166,7 +166,33 @@ func BenchmarkMonitor_CheckSites(b *testing.B) {
 	for i := 0; i < 5000; i++ {
 		monitor.CheckSites(ctx)
 	}
+}
 
+func BenchmarkMonitor_Parallel(b *testing.B) {
+	stub := &serverStub{}
+	var testServers []*httptest.Server
+	var urls []string
+
+	for i := 0; i < 10; i++ {
+		testServer := httptest.NewServer(http.HandlerFunc(stub.Handle))
+		testServers = append(testServers, testServer)
+		urls = append(urls, testServer.URL)
+	}
+
+	monitor, err := webmon.New(urls)
+	assert.NoError(b, err)
+	// monitor.MaxConcurrentChecks = 3
+
+	ctx := context.Background()
+	b.ResetTimer()
+
+	for i := 0; i < 1000; i++ {
+		monitor.CheckSites(ctx)
+	}
+
+	for _, testServer := range testServers {
+		testServer.Close()
+	}
 }
 
 type serverStub struct {

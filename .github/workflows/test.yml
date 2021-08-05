@@ -5,7 +5,7 @@ on:
     branches-ignore:
       - master
       - refactor
-      - setroom
+      - parallel
   pull_request_target:
 
 jobs:

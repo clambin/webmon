@@ -10,17 +10,22 @@ import (
 	"time"
 )
 
+// DefaultMaxConcurrentChecks specifies the default maximum number of parallel checks
+const DefaultMaxConcurrentChecks = 5
+
 // A Monitor checks a list of website, either on a continuous basis through the Run() function, or on demand via the CheckSites method.
 // See the Entry structure for attributes of a site that are checked.
 type Monitor struct {
 	// HTTPClient is the http.Client that will be used to check sites.
 	// Under normal circumstances, this can be left blank and Monitor will create the required client.
-	HTTPClient    *http.Client
-	sites         map[*url.URL]Entry
-	lock          sync.RWMutex
-	metricUp      *prometheus.Desc
-	metricLatency *prometheus.Desc
-	metricCertAge *prometheus.Desc
+	HTTPClient *http.Client
+	// MaxConcurrentChecks limits the number of sites that are checked in parallel. Default: DefaultMaxConcurrentChecks
+	MaxConcurrentChecks int64
+	sites               map[*url.URL]Entry
+	lock                sync.RWMutex
+	metricUp            *prometheus.Desc
+	metricLatency       *prometheus.Desc
+	metricCertAge       *prometheus.Desc
 }
 
 // The Entry structure holds the attributes that will be checked
@@ -99,25 +104,4 @@ func (monitor *Monitor) Run(ctx context.Context, interval time.Duration) (err er
 
 	ticker.Stop()
 	return
-}
-
-// CheckSites checks each site. The site's status isn't reported here, but is kept internally to be scraped by Prometheus
-// using the Collect function.
-func (monitor *Monitor) CheckSites(ctx context.Context) {
-	monitor.lock.Lock()
-	defer monitor.lock.Unlock()
-
-	// TODO: probably want to limit how many sites we poll concurrently
-	responses := make(map[*url.URL]chan Entry)
-	for site := range monitor.sites {
-		responses[site] = make(chan Entry)
-
-		go func(ch chan Entry, site *url.URL) {
-			ch <- monitor.checkSite(ctx, site)
-		}(responses[site], site)
-	}
-
-	for site, ch := range responses {
-		monitor.sites[site] = <-ch
-	}
 }
