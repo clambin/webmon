@@ -15,10 +15,12 @@ func (monitor *Monitor) checkSite(ctx context.Context, site *url.URL) (entry Ent
 
 	if err == nil {
 		var resp *http.Response
+		start := time.Now()
 		resp, err = monitor.HTTPClient.Do(req)
 
 		if err == nil {
 			entry.Up = validStatusCode(resp.StatusCode)
+			entry.Latency = time.Now().Sub(start)
 
 			if resp.TLS != nil && len(resp.TLS.PeerCertificates) > 0 {
 				entry.CertificateAge = resp.TLS.PeerCertificates[0].NotAfter.Sub(time.Now()).Hours() / 24

@@ -58,7 +58,7 @@ func TestCollector_Collect(t *testing.T) {
 	m := <-ch
 	assert.Equal(t, 1.0, metricValue(m).GetGauge().GetValue())
 	m = <-ch
-	assert.Less(t, metricValue(m).GetGauge().GetValue(), 0.1)
+	assert.NotZero(t, metricValue(m).GetGauge().GetValue())
 	m = <-ch
 	assert.Zero(t, metricValue(m).GetGauge().GetValue())
 
