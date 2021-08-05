@@ -64,6 +64,7 @@ func (monitor *Monitor) checkSite(ctx context.Context, site string) (entry Entry
 		"site":    site,
 		"up":      entry.Up,
 		"certAge": entry.CertificateAge,
+		"latency": entry.Latency,
 	}).Debug("checkSite")
 	return
 }

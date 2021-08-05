@@ -71,6 +71,7 @@ func main() {
 	r := mux.NewRouter()
 	r.Use(prometheusMiddleware)
 	r.Path("/metrics").Handler(promhttp.Handler())
+	r.Path("/health").Handler(http.HandlerFunc(monitor.Health))
 	err = http.ListenAndServe(listenAddress, r)
 	if err != nil {
 		log.WithError(err).Fatal("unable to start metrics server")

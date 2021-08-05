@@ -1,7 +1,7 @@
 FROM alpine
 
 RUN apk update && \
-    apk add --no-cache tzdata
+    apk add --no-cache tzdata curl
 
 WORKDIR /app
 

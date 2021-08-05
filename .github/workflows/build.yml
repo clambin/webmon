@@ -5,7 +5,7 @@ on:
     branches:
     - master
     - refactor
-    - parallel
+    - healthz
 jobs:
   test:
     runs-on: ubuntu-latest
