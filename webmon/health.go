@@ -27,6 +27,7 @@ func convert(input map[string]Entry) map[string]jsonEntry {
 	return output
 }
 
+// Health reports back all configured sites and their state
 func (monitor *Monitor) Health(w http.ResponseWriter, _ *http.Request) {
 	monitor.lock.RLock()
 	defer monitor.lock.RUnlock()
