@@ -2,12 +2,14 @@ package webmon
 
 import "github.com/prometheus/client_golang/prometheus"
 
+// Describe implements the prometheus collector Describe interface
 func (monitor *Monitor) Describe(ch chan<- *prometheus.Desc) {
 	ch <- monitor.metricUp
 	ch <- monitor.metricLatency
 	ch <- monitor.metricCertAge
 }
 
+// Collect implements the prometheus collector Collect interface
 func (monitor *Monitor) Collect(ch chan<- prometheus.Metric) {
 	monitor.lock.RLock()
 	defer monitor.lock.RUnlock()

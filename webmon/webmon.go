@@ -10,7 +10,11 @@ import (
 	"time"
 )
 
+// A Monitor checks a list of website, either on a continuous basis through the Run() function, or on demand via the CheckSites method.
+// See the Entry structure for attributes of a site that are checked.
 type Monitor struct {
+	// HTTPClient is the http.Client that will be used to check sites.
+	// Under normal circumstances, this can be left blank and Monitor will create the required client.
 	HTTPClient    *http.Client
 	sites         map[*url.URL]Entry
 	lock          sync.RWMutex
@@ -19,13 +23,20 @@ type Monitor struct {
 	metricCertAge *prometheus.Desc
 }
 
+// The Entry structure holds the attributes that will be checked
 type Entry struct {
-	Up             bool
+	// Up indicates if the site is up or down
+	Up bool
+	// CertificateAge contains the number of days that the site's TLS certificate is still valid
+	// For HTTP sites, this will be zero.
 	CertificateAge float64
-	Latency        time.Duration
-	LastCheck      time.Time
+	// Latency contains the time it took to check the site
+	Latency time.Duration
+	// LastCheck is the timestamp the site was last checked. Before there first check, this is zero
+	LastCheck time.Time
 }
 
+// New creates a new Monitor instance for the specified list of sites
 func New(hosts []string) (monitor *Monitor, err error) {
 	sites := make(map[*url.URL]Entry)
 
@@ -55,13 +66,13 @@ func New(hosts []string) (monitor *Monitor, err error) {
 		),
 		metricLatency: prometheus.NewDesc(
 			prometheus.BuildFQName("webmon", "site", "latency_seconds"),
-			"Time to check the site in seconds",
+			"Time to check the site, in seconds",
 			[]string{"site_url"},
 			nil,
 		),
 		metricCertAge: prometheus.NewDesc(
 			prometheus.BuildFQName("webmon", "certificate", "expiry"),
-			"Measures how long until a certificate expires",
+			"Number of days before the HTTPS certificate expires",
 			[]string{"site_url"},
 			nil,
 		),
@@ -70,6 +81,9 @@ func New(hosts []string) (monitor *Monitor, err error) {
 	return
 }
 
+// Run calls CheckSites on a recurring basis, based on the specified interval.
+// To be able to stop this function, call it with a context obtained by context.WithCancel()
+// and then call cancel() when required.
 func (monitor *Monitor) Run(ctx context.Context, interval time.Duration) (err error) {
 	monitor.CheckSites(ctx)
 
@@ -87,6 +101,8 @@ func (monitor *Monitor) Run(ctx context.Context, interval time.Duration) (err er
 	return
 }
 
+// CheckSites checks each site. The site's status isn't reported here, but is kept internally to be scraped by Prometheus
+// using the Collect function.
 func (monitor *Monitor) CheckSites(ctx context.Context) {
 	monitor.lock.Lock()
 	defer monitor.lock.Unlock()
