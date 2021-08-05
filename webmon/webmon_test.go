@@ -55,6 +55,7 @@ func TestCollector_Collect(t *testing.T) {
 	ch := make(chan prometheus.Metric)
 	go monitor.Collect(ch)
 
+	// TODO: check labels
 	m := <-ch
 	assert.Equal(t, 1.0, metricValue(m).GetGauge().GetValue())
 	m = <-ch

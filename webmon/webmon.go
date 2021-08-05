@@ -44,7 +44,7 @@ func New(hosts []string) (monitor *Monitor, err error) {
 	monitor = &Monitor{
 		HTTPClient: &http.Client{
 			Timeout: 10 * time.Second,
-			CheckRedirect: func(_ *http.Request, _[]*http.Request) error {
+			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
 		},
@@ -52,19 +52,19 @@ func New(hosts []string) (monitor *Monitor, err error) {
 		metricUp: prometheus.NewDesc(
 			prometheus.BuildFQName("webmon", "site", "up"),
 			"Set to 1 if the site is up",
-			[]string{"name"},
+			[]string{"site_url"},
 			nil,
 		),
 		metricLatency: prometheus.NewDesc(
 			prometheus.BuildFQName("webmon", "site", "latency_seconds"),
 			"Time to check the site in seconds",
-			[]string{"name"},
+			[]string{"site_url"},
 			nil,
-			),
+		),
 		metricCertAge: prometheus.NewDesc(
 			prometheus.BuildFQName("webmon", "certificate", "expiry"),
 			"Measures how long until a certificate expires",
-			[]string{"name"},
+			[]string{"site_url"},
 			nil,
 		),
 	}
@@ -76,11 +76,11 @@ func (monitor *Monitor) Run(ctx context.Context, interval time.Duration) (err er
 	monitor.CheckSites(ctx)
 
 	ticker := time.NewTicker(interval)
-	for running := true; running;  {
+	for running := true; running; {
 		select {
-		case <- ctx.Done():
+		case <-ctx.Done():
 			running = false
-		case <- ticker.C:
+		case <-ticker.C:
 			monitor.CheckSites(ctx)
 		}
 	}
@@ -104,6 +104,6 @@ func (monitor *Monitor) CheckSites(ctx context.Context) {
 	}
 
 	for site, ch := range responses {
-		monitor.sites[site] = <- ch
+		monitor.sites[site] = <-ch
 	}
 }
