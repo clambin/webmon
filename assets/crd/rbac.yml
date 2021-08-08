@@ -2,15 +2,15 @@ apiVersion: v1
 automountServiceAccountToken: true
 kind: ServiceAccount
 metadata:
-  name: monitor
+  name: webmon
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: monitor-clusterrole
+  name: webmon-clusterrole
 rules:
   - apiGroups:
-      - monitor.clambin.private
+      - webmon.clambin.private
     resources:
       - targets
     verbs:
@@ -19,12 +19,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: monitor-clusterrolebind
+  name: webmon-clusterrolebind
 subjects:
   - kind: ServiceAccount
-    name: monitor
+    name: webmon
     namespace: default
 roleRef:
   kind: ClusterRole
-  name: monitor-clusterrole
+  name: webmon-clusterrole
   apiGroup: rbac.authorization.k8s.io

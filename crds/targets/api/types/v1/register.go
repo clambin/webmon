@@ -7,7 +7,7 @@ import (
 )
 
 // GroupName for the custom resource API
-const GroupName = "monitor.clambin.private"
+const GroupName = "webmon.clambin.private"
 
 // GroupVersion for the custom resource API
 const GroupVersion = "v1"

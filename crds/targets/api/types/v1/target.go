@@ -7,7 +7,7 @@ import (
 
 // structures for the custom resource.  V1 layout is as follows:
 //
-// apiVersion: monitor.clambin.private/v1
+// apiVersion: webmon.clambin.private/v1
 // kind: Target
 // metadata:
 //   name: <name>
