@@ -1,4 +1,4 @@
-package webmon
+package monitor
 
 import (
 	"encoding/json"
@@ -31,19 +31,6 @@ func convert(input map[string]Entry) map[string]jsonEntry {
 func (monitor *Monitor) Health(w http.ResponseWriter, _ *http.Request) {
 	monitor.lock.RLock()
 	defer monitor.lock.RUnlock()
-
-	running := false
-	for _, entry := range monitor.sites {
-		if entry.LastCheck.IsZero() == false {
-			running = true
-			break
-		}
-	}
-
-	if running == false {
-		http.Error(w, "Server not running yet", http.StatusNotFound)
-		return
-	}
 
 	out, err := json.MarshalIndent(convert(monitor.sites), "", "  ")
 

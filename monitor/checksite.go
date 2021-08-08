@@ -1,4 +1,4 @@
-package webmon
+package monitor
 
 import (
 	"context"

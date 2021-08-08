@@ -1,7 +1,7 @@
-package webmon_test
+package monitor_test
 
 import (
-	"github.com/clambin/webmon/webmon"
+	"github.com/clambin/webmon/monitor"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -14,5 +14,5 @@ func TestUnique(t *testing.T) {
 		"ccc",
 	}
 
-	assert.Equal(t, []string{"aaa", "bbb", "ccc"}, webmon.Unique(input))
+	assert.Equal(t, []string{"aaa", "bbb", "ccc"}, monitor.Unique(input))
 }

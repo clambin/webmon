@@ -1,8 +1,9 @@
-package webmon
+package monitor
 
 import (
 	"context"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"sync"
 	"time"
@@ -14,6 +15,10 @@ const DefaultMaxConcurrentChecks = 5
 // A Monitor checks a list of website, either on a continuous basis through the Run() function, or on demand via the CheckSites method.
 // See the Entry structure for attributes of a site that are checked.
 type Monitor struct {
+	// The Register channel is used to add a host to the monitor
+	Register chan string
+	// The Unregister channel is used to remove a host from the monitor
+	Unregister chan string
 	// HTTPClient is the http.Client that will be used to check sites.
 	// Under normal circumstances, this can be left blank and Monitor will create the required client.
 	HTTPClient *http.Client
@@ -48,7 +53,9 @@ func New(hosts []string) (monitor *Monitor) {
 				return http.ErrUseLastResponse
 			},
 		},
-		sites: make(map[string]Entry),
+		Register:   make(chan string),
+		Unregister: make(chan string),
+		sites:      make(map[string]Entry),
 		metricUp: prometheus.NewDesc(
 			prometheus.BuildFQName("webmon", "site", "up"),
 			"Set to 1 if the site is up",
@@ -89,9 +96,42 @@ func (monitor *Monitor) Run(ctx context.Context, interval time.Duration) (err er
 			running = false
 		case <-ticker.C:
 			monitor.CheckSites(ctx)
+		case site := <-monitor.Register:
+			monitor.register(site)
+		case site := <-monitor.Unregister:
+			monitor.unregister(site)
 		}
 	}
 
 	ticker.Stop()
+	return
+}
+
+func (monitor *Monitor) register(site string) {
+	monitor.lock.Lock()
+	defer monitor.lock.Unlock()
+
+	if _, ok := monitor.sites[site]; ok == false {
+		log.WithField("url", site).Info("registering new url")
+		monitor.sites[site] = Entry{}
+	}
+}
+
+func (monitor *Monitor) unregister(site string) {
+	monitor.lock.Lock()
+	defer monitor.lock.Unlock()
+
+	log.WithField("url", site).Info("unregistering url")
+	delete(monitor.sites, site)
+}
+
+// GetEntry returns the monitor's entry for the specified site name.
+// Should only be used for testing purposes
+func (monitor *Monitor) GetEntry(site string) (entry Entry, ok bool) {
+	monitor.lock.RLock()
+	defer monitor.lock.RUnlock()
+
+	entry, ok = monitor.sites[site]
+
 	return
 }

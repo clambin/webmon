@@ -1,10 +1,9 @@
-package webmon_test
+package monitor_test
 
 import (
 	"context"
 	"encoding/json"
-	"github.com/clambin/webmon/webmon"
-	log "github.com/sirupsen/logrus"
+	"github.com/clambin/webmon/monitor"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -13,25 +12,22 @@ import (
 )
 
 func TestMonitor_Health(t *testing.T) {
-	log.SetLevel(log.DebugLevel)
 	stub := &serverStub{}
 	testServer := httptest.NewTLSServer(http.HandlerFunc(stub.Handle))
 	defer testServer.Close()
 
-	monitor := webmon.New([]string{testServer.URL})
+	m := monitor.New([]string{testServer.URL})
 	// allow the client to recognize the server during HTTPS TLS handshake
-	monitor.HTTPClient = testServer.Client()
+	m.HTTPClient = testServer.Client()
 
 	w := httptest.NewRecorder()
-	monitor.Health(w, &http.Request{})
+	m.Health(w, &http.Request{})
 	resp := w.Result()
 
-	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-
-	monitor.CheckSites(context.Background())
+	m.CheckSites(context.Background())
 
 	w = httptest.NewRecorder()
-	monitor.Health(w, &http.Request{})
+	m.Health(w, &http.Request{})
 	resp = w.Result()
 
 	if assert.Equal(t, http.StatusOK, resp.StatusCode) {

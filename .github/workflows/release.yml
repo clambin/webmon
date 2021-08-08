@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [ webmon ]
+        target: [ monitor ]
         platform: [ linux ]
         arch: [ amd64, arm, arm64 ]
     steps:
@@ -58,15 +58,15 @@ jobs:
       - uses: actions/checkout@v2.3.4
       - uses: actions/download-artifact@v2
         with:
-          name: webmon-linux-arm
+          name: monitor-linux-arm
           path: ./bld
       - uses: actions/download-artifact@v2
         with:
-          name: webmon-linux-arm64
+          name: monitor-linux-arm64
           path: ./bld
       - uses: actions/download-artifact@v2
         with:
-          name: webmon-linux-amd64
+          name: monitor-linux-amd64
           path: ./bld
       - name: Fix permissions
         run: chmod +x bld/*
@@ -80,7 +80,7 @@ jobs:
       - uses: docker/metadata-action@v3.4.1
         id: docker_meta
         with:
-          images: ghcr.io/clambin/webmon
+          images: ghcr.io/clambin/monitor
           tags: |
             type=sha
             type=semver,pattern={{version}}

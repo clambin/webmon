@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 465,
-  "iteration": 1628174422797,
+  "iteration": 1628336309036,
   "links": [],
   "panels": [
     {
@@ -371,6 +371,7 @@
       "type": "timeseries"
     }
   ],
+  "refresh": "5m",
   "schemaVersion": 30,
   "style": "dark",
   "tags": [],
@@ -406,12 +407,12 @@
     ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "sites",
   "uid": "nGIZXpGnk",
-  "version": 11
+  "version": 16
 }

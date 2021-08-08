@@ -1,4 +1,4 @@
-package webmon
+package monitor
 
 // Unique returns the list of unique strings
 func Unique(list []string) (unique []string) {

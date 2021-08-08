@@ -1,6 +1,10 @@
-package webmon
+package monitor
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
+	"time"
+)
 
 // Describe implements the prometheus collector Describe interface
 func (monitor *Monitor) Describe(ch chan<- *prometheus.Desc) {
@@ -11,6 +15,7 @@ func (monitor *Monitor) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect implements the prometheus collector Collect interface
 func (monitor *Monitor) Collect(ch chan<- prometheus.Metric) {
+	start := time.Now()
 	monitor.lock.RLock()
 	defer monitor.lock.RUnlock()
 
@@ -25,4 +30,6 @@ func (monitor *Monitor) Collect(ch chan<- prometheus.Metric) {
 			ch <- prometheus.MustNewConstMetric(monitor.metricCertAge, prometheus.GaugeValue, entry.CertificateAge, name)
 		}
 	}
+
+	log.WithField("duration", time.Now().Sub(start)).Debug("prometheus scrape done")
 }

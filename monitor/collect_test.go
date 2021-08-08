@@ -1,11 +1,10 @@
-package webmon_test
+package monitor_test
 
 import (
 	"context"
-	"github.com/clambin/webmon/webmon"
+	"github.com/clambin/webmon/monitor"
 	"github.com/prometheus/client_golang/prometheus"
 	pcg "github.com/prometheus/client_model/go"
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -15,10 +14,10 @@ import (
 )
 
 func TestCollector_Describe(t *testing.T) {
-	monitor := webmon.New([]string{"localhost"})
+	m := monitor.New([]string{"localhost"})
 
 	metrics := make(chan *prometheus.Desc)
-	go monitor.Describe(metrics)
+	go m.Describe(metrics)
 
 	for _, name := range []string{
 		"webmon_site_up",
@@ -35,31 +34,31 @@ func TestCollector_Collect(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(stub.Handle))
 	defer testServer.Close()
 
-	monitor := webmon.New([]string{testServer.URL})
+	m := monitor.New([]string{testServer.URL})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	monitor.CheckSites(ctx)
+	m.CheckSites(ctx)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		err2 := monitor.Run(ctx, 1*time.Minute)
+		err2 := m.Run(ctx, 1*time.Minute)
 		assert.NoError(t, err2)
 		wg.Done()
 	}()
 
 	ch := make(chan prometheus.Metric)
-	go monitor.Collect(ch)
+	go m.Collect(ch)
 
 	// TODO: check labels
-	m := <-ch
-	assert.Equal(t, 1.0, metricValue(m).GetGauge().GetValue())
-	m = <-ch
-	assert.NotZero(t, metricValue(m).GetGauge().GetValue())
-	m = <-ch
-	assert.Zero(t, metricValue(m).GetGauge().GetValue())
+	metric := <-ch
+	assert.Equal(t, 1.0, metricValue(metric).GetGauge().GetValue())
+	metric = <-ch
+	assert.NotZero(t, metricValue(metric).GetGauge().GetValue())
+	metric = <-ch
+	assert.Zero(t, metricValue(metric).GetGauge().GetValue())
 
 	cancel()
 
@@ -71,32 +70,32 @@ func TestCollector_Collect_TLS(t *testing.T) {
 	testServer := httptest.NewTLSServer(http.HandlerFunc(stub.Handle))
 	defer testServer.Close()
 
-	monitor := webmon.New([]string{testServer.URL})
+	m := monitor.New([]string{testServer.URL})
 	// allow the client to recognize the server during HTTPS TLS handshake
-	monitor.HTTPClient = testServer.Client()
+	m.HTTPClient = testServer.Client()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	monitor.CheckSites(ctx)
+	m.CheckSites(ctx)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		err2 := monitor.Run(ctx, 1*time.Minute)
+		err2 := m.Run(ctx, 1*time.Minute)
 		assert.NoError(t, err2)
 		wg.Done()
 	}()
 
 	ch := make(chan prometheus.Metric)
-	go monitor.Collect(ch)
+	go m.Collect(ch)
 
-	m := <-ch
-	assert.Equal(t, 1.0, metricValue(m).GetGauge().GetValue())
-	m = <-ch
-	assert.Less(t, metricValue(m).GetGauge().GetValue(), 0.1)
-	m = <-ch
-	assert.NotZero(t, metricValue(m).GetGauge().GetValue())
+	metric := <-ch
+	assert.Equal(t, 1.0, metricValue(metric).GetGauge().GetValue())
+	metric = <-ch
+	assert.Less(t, metricValue(metric).GetGauge().GetValue(), 0.1)
+	metric = <-ch
+	assert.NotZero(t, metricValue(metric).GetGauge().GetValue())
 
 	cancel()
 
@@ -104,20 +103,19 @@ func TestCollector_Collect_TLS(t *testing.T) {
 }
 
 func TestCollector_Collect_StatusCodes(t *testing.T) {
-	log.SetLevel(log.DebugLevel)
 	stub := &serverStub{}
 	testServer := httptest.NewTLSServer(http.HandlerFunc(stub.Handle))
 	defer testServer.Close()
 
-	monitor := webmon.New([]string{testServer.URL})
+	m := monitor.New([]string{testServer.URL})
 	// allow the client to recognize the server during HTTPS TLS handshake
-	monitor.HTTPClient = testServer.Client()
+	m.HTTPClient = testServer.Client()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	go func() {
-		err2 := monitor.Run(ctx, 10*time.Millisecond)
+		err2 := m.Run(ctx, 10*time.Millisecond)
 		assert.NoError(t, err2)
 	}()
 
@@ -137,12 +135,12 @@ func TestCollector_Collect_StatusCodes(t *testing.T) {
 
 		assert.Eventually(t, func() bool {
 			ch := make(chan prometheus.Metric)
-			go monitor.Collect(ch)
+			go m.Collect(ch)
 
-			m := <-ch
+			metric := <-ch
 			_ = <-ch
 			_ = <-ch
-			return metricValue(m).GetGauge().GetValue() == testCase.up
+			return metricValue(metric).GetGauge().GetValue() == testCase.up
 		}, 500*time.Millisecond, 10*time.Millisecond)
 	}
 }
@@ -152,15 +150,15 @@ func BenchmarkMonitor_CheckSites(b *testing.B) {
 	testServer := httptest.NewTLSServer(http.HandlerFunc(stub.Handle))
 	defer testServer.Close()
 
-	monitor := webmon.New([]string{testServer.URL})
+	m := monitor.New([]string{testServer.URL})
 	// allow the client to recognize the server during HTTPS TLS handshake
-	monitor.HTTPClient = testServer.Client()
+	m.HTTPClient = testServer.Client()
 
 	ctx := context.Background()
 	b.ResetTimer()
 
 	for i := 0; i < 5000; i++ {
-		monitor.CheckSites(ctx)
+		m.CheckSites(ctx)
 	}
 }
 
@@ -175,14 +173,14 @@ func BenchmarkMonitor_Parallel(b *testing.B) {
 		urls = append(urls, testServer.URL)
 	}
 
-	monitor := webmon.New(urls)
+	m := monitor.New(urls)
 	// monitor.MaxConcurrentChecks = 3
 
 	ctx := context.Background()
 	b.ResetTimer()
 
 	for i := 0; i < 1000; i++ {
-		monitor.CheckSites(ctx)
+		m.CheckSites(ctx)
 	}
 
 	for _, testServer := range testServers {
