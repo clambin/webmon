@@ -12,7 +12,7 @@ Monitors website update, latency & certificate expiry.
 ### Command line arguments
 
 ```
-usage: foo [<flags>] [<hosts>...]
+usage: webmon [<flags>] [<hosts>...]
 
 webmon
 
