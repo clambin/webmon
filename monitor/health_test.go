@@ -42,7 +42,7 @@ func TestMonitor_Health(t *testing.T) {
 			if assert.True(t, ok) {
 				assert.True(t, entry.(map[string]interface{})["Up"].(bool))
 				assert.NotZero(t, entry.(map[string]interface{})["CertificateAge"].(float64))
-				assert.NotZero(t, entry.(map[string]interface{})["Latency"].(float64))
+				assert.NotZero(t, entry.(map[string]interface{})["Latency"].(string))
 
 				var lastCheck time.Time
 				lastCheck, err = time.Parse(time.RFC3339, entry.(map[string]interface{})["LastCheck"].(string))

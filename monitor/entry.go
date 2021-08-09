@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -18,27 +19,29 @@ type Entry struct {
 	LastCheck time.Time
 }
 
-// Duration datatype. Equivalent to time.Duration, but allows us to marshal/unmarshal Entry data structure
-type Duration time.Duration
-
-// Seconds returns the number of seconds of the duration
-func (d Duration) Seconds() float64 {
-	return time.Duration(d).Seconds()
+type Duration struct {
+	time.Duration
 }
 
 // MarshalJSON marshals Duration to bytes
 func (d Duration) MarshalJSON() (out []byte, err error) {
-	return json.Marshal(d.Seconds())
+	return json.Marshal(d.String())
 }
 
 // UnmarshalJSON unmarshals bytes to a Duration
 func (d *Duration) UnmarshalJSON(b []byte) (err error) {
-	var duration time.Duration
-	err = json.Unmarshal(b, &duration)
+	var v interface{}
+	err = json.Unmarshal(b, &v)
 
-	if err != nil {
-		*d = Duration(duration)
+	if err == nil {
+		switch value := v.(type) {
+		// case float64:
+		//	d.Duration = time.Duration(value)
+		case string:
+			d.Duration, err = time.ParseDuration(value)
+		default:
+			err = fmt.Errorf("invalid duration: %v", value)
+		}
 	}
-
 	return
 }

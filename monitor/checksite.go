@@ -48,7 +48,7 @@ func (monitor *Monitor) checkSite(ctx context.Context, site string) (entry Entry
 
 		if err == nil {
 			entry.Up = validStatusCode(resp.StatusCode)
-			entry.Latency = Duration(time.Now().Sub(start))
+			entry.Latency = Duration{Duration: time.Now().Sub(start)}
 
 			if resp.TLS != nil && len(resp.TLS.PeerCertificates) > 0 {
 				entry.CertificateAge = resp.TLS.PeerCertificates[0].NotAfter.Sub(time.Now()).Hours() / 24
