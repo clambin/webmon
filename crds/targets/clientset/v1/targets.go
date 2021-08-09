@@ -8,19 +8,19 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// TargetInterface lists the API endpoints. Currently, only list & watch are supported
-type TargetInterface interface {
+// TargetCRDInterface lists the API endpoints. Currently, only list & watch are supported
+type TargetCRDInterface interface {
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 	// List(ctx context.Context, opts metav1.ListOptions) (*v1.TargetList, error)
 }
 
-type targetClient struct {
+type targetCRDClient struct {
 	restClient rest.Interface
 	ns         string
 }
 
 // Watch creates a watcher that will notify when a target is added/updated/deleted
-func (c *targetClient) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
+func (c *targetCRDClient) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.restClient.
 		Get().
@@ -33,7 +33,7 @@ func (c *targetClient) Watch(ctx context.Context, opts metav1.ListOptions) (watc
 /*
 
 // List retrieves the list of Targets found in the provided namespace, or all namespaces
-func (c *targetClient) List(ctx context.Context, opts metav1.ListOptions) (*v1.TargetList, error) {
+func (c *targetCRDClient) List(ctx context.Context, opts metav1.ListOptions) (*v1.TargetList, error) {
 	result := v1.TargetList{}
 	err := c.restClient.
 		Get().

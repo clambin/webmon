@@ -25,7 +25,7 @@ type Client struct {
 
 // Targets emulates the API's Targets function. Currently, it passes through to the Handler,
 // i.e. it does not support any namespace awareness.
-func (client *Client) Targets(_ string) v1.TargetInterface {
+func (client *Client) Targets(_ string) v1.TargetCRDInterface {
 	return &client.Handler
 }
 

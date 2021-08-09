@@ -1,11 +1,6 @@
-package v1
-
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-)
-
-// structures for the custom resource.  V1 layout is as follows:
+// Package v1 data structures and supporting functions for the Target CRD
+//
+// V1 layout is as follows:
 //
 // apiVersion: webmon.clambin.private/v1
 // kind: Target
@@ -14,6 +9,12 @@ import (
 //   namespace: <namespace>
 // spec:
 //   url: https://grafana.agrajag.duckdns.org
+package v1
+
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+)
 
 // TargetSpec contains the fields within the "spec" entry of the custom resource
 type TargetSpec struct {

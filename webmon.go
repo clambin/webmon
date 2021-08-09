@@ -120,7 +120,7 @@ func newWatcher(monitor *monitor.Monitor, namespace string) (w *watcher.Watcher,
 		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 	}
 
-	var client *clientV1.WebMonV1Client
+	var client *clientV1.TargetsCRDClient
 	if err == nil {
 		client, err = clientV1.NewForConfig(config)
 	}

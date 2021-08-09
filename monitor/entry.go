@@ -18,16 +18,20 @@ type Entry struct {
 	LastCheck time.Time
 }
 
+// Duration datatype. Equivalent to time.Duration, but allows us to marshal/unmarshal Entry data structure
 type Duration time.Duration
 
+// Seconds returns the number of seconds of the duration
 func (d Duration) Seconds() float64 {
 	return time.Duration(d).Seconds()
 }
 
+// MarshalJSON marshals Duration to bytes
 func (d Duration) MarshalJSON() (out []byte, err error) {
 	return json.Marshal(d.Seconds())
 }
 
+// UnmarshalJSON unmarshals bytes to a Duration
 func (d *Duration) UnmarshalJSON(b []byte) (err error) {
 	var duration time.Duration
 	err = json.Unmarshal(b, &duration)

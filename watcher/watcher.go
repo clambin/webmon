@@ -12,7 +12,7 @@ import (
 
 // A Watcher checks kubernetes custom resources on a periodic basis for newRegistry URLs to monitor
 type Watcher struct {
-	Client     clientV1.WebMonV1Interface
+	Client     clientV1.TargetsCRDInterface
 	register   chan string
 	unregister chan string
 	namespace  string
@@ -23,7 +23,7 @@ type Watcher struct {
 // the URL to the register/unregister channel respectively.
 // If the namespace is specified, Watcher will only scan that namespace. Otherwise, all namespaces are scanned.
 // Note that this needs RBAC setup to ensure the client can access those resources.
-func NewWithClient(register, unregister chan string, namespace string, client clientV1.WebMonV1Interface) *Watcher {
+func NewWithClient(register, unregister chan string, namespace string, client clientV1.TargetsCRDInterface) *Watcher {
 	return &Watcher{
 		Client:     client,
 		register:   register,

@@ -1,3 +1,4 @@
+// Package v1 Client for Target CRD
 package v1
 
 import (
@@ -8,18 +9,18 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// WebMonV1Interface interface for a WebMonV1Client
-type WebMonV1Interface interface {
-	Targets(namespace string) TargetInterface
+// TargetsCRDInterface interface for a TargetsCRDClient
+type TargetsCRDInterface interface {
+	Targets(namespace string) TargetCRDInterface
 }
 
-// WebMonV1Client structure for a V1 version of the WebMon CRD API client
-type WebMonV1Client struct {
+// TargetsCRDClient structure for a V1 version of the WebMon CRD API client
+type TargetsCRDClient struct {
 	restClient *rest.RESTClient
 }
 
 // NewForConfig creates a new API client for the provided REST configuration
-func NewForConfig(c *rest.Config) (client *WebMonV1Client, err error) {
+func NewForConfig(c *rest.Config) (client *TargetsCRDClient, err error) {
 	err = v1.AddToScheme(scheme.Scheme)
 
 	if err != nil {
@@ -36,7 +37,7 @@ func NewForConfig(c *rest.Config) (client *WebMonV1Client, err error) {
 	restClient, err = rest.RESTClientFor(&config)
 
 	if err == nil {
-		client = &WebMonV1Client{
+		client = &TargetsCRDClient{
 			restClient: restClient,
 		}
 	}
@@ -49,8 +50,8 @@ func NewForConfig(c *rest.Config) (client *WebMonV1Client, err error) {
 }
 
 // Targets gives access to the API endpoints for the specified namespace.  If namespace is blank, all namespaces are considered
-func (c *WebMonV1Client) Targets(namespace string) TargetInterface {
-	return &targetClient{
+func (c *TargetsCRDClient) Targets(namespace string) TargetCRDInterface {
+	return &targetCRDClient{
 		restClient: c.restClient,
 		ns:         namespace,
 	}
