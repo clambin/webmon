@@ -174,7 +174,7 @@ func BenchmarkMonitor_Parallel(b *testing.B) {
 	}
 
 	m := monitor.New(urls)
-	// monitor.MaxConcurrentChecks = 3
+	// m.MaxConcurrentChecks = 3
 
 	ctx := context.Background()
 	b.ResetTimer()

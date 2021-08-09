@@ -2,13 +2,13 @@
 //
 // V1 layout is as follows:
 //
-// apiVersion: webmon.clambin.private/v1
-// kind: Target
-// metadata:
-//   name: <name>
-//   namespace: <namespace>
-// spec:
-//   url: https://grafana.agrajag.duckdns.org
+//   apiVersion: webmon.clambin.private/v1
+//   kind: Target
+//   metadata:
+//     name: <name>
+//     namespace: <namespace>
+//   spec:
+//     url: https://example.com
 package v1
 
 import (
