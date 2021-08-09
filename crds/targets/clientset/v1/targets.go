@@ -8,8 +8,9 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// TargetCRDInterface lists the API endpoints. Currently, only list & watch are supported
+// TargetCRDInterface lists the API endpoints. Currently, only watch is supported
 type TargetCRDInterface interface {
+	// Watch creates a watcher that receives notifications when a target is added/updated/deleted
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 	// List(ctx context.Context, opts metav1.ListOptions) (*v1.TargetList, error)
 }

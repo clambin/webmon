@@ -18,6 +18,7 @@ import (
 
 // TargetSpec contains the fields within the "spec" entry of the custom resource
 type TargetSpec struct {
+	// URL of the site to monitor
 	URL string `json:"url"`
 }
 
