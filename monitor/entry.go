@@ -19,6 +19,7 @@ type Entry struct {
 	LastCheck time.Time
 }
 
+// Duration datatype. Equivalent to time.Duration, but allows us to marshal/unmarshal Entry data structure to/from json
 type Duration struct {
 	time.Duration
 }
