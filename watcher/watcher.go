@@ -73,6 +73,11 @@ func (watcher *Watcher) watch(ctx context.Context) (w watch.Interface) {
 }
 
 func (watcher *Watcher) processEvent(event watch.Event) {
+	if event.Object == nil {
+		log.WithField("type", event.Type).Warning("ignoring CRD event without an object")
+		return
+	}
+
 	target := event.Object.(*v1.Target)
 	log.WithFields(log.Fields{
 		"name":      target.Name,
