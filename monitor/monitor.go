@@ -31,19 +31,6 @@ type Monitor struct {
 	metricCertAge       *prometheus.Desc
 }
 
-// The Entry structure holds the attributes that will be checked
-type Entry struct {
-	// Up indicates if the site is up or down
-	Up bool
-	// CertificateAge contains the number of days that the site's TLS certificate is still valid
-	// For HTTP sites, this will be zero.
-	CertificateAge float64
-	// Latency contains the time it took to check the site
-	Latency time.Duration
-	// LastCheck is the timestamp the site was last checked. Before there first check, this is zero
-	LastCheck time.Time
-}
-
 // New creates a new Monitor instance for the specified list of sites
 func New(hosts []string) (monitor *Monitor) {
 	monitor = &Monitor{

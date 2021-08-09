@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestMonitor_Health(t *testing.T) {
@@ -39,10 +40,14 @@ func TestMonitor_Health(t *testing.T) {
 		if assert.NoError(t, err) {
 			entry, ok := parsed[testServer.URL]
 			if assert.True(t, ok) {
-				assert.True(t, entry.(map[string]interface{})["up"].(bool))
-				assert.NotZero(t, entry.(map[string]interface{})["certificate_age"].(float64))
-				assert.NotZero(t, entry.(map[string]interface{})["latency"].(float64))
-				assert.NotEqual(t, "0001-01-01T00:00:00Z", entry.(map[string]interface{})["last_check"].(string))
+				assert.True(t, entry.(map[string]interface{})["Up"].(bool))
+				assert.NotZero(t, entry.(map[string]interface{})["CertificateAge"].(float64))
+				assert.NotZero(t, entry.(map[string]interface{})["Latency"].(float64))
+
+				var lastCheck time.Time
+				lastCheck, err = time.Parse(time.RFC3339, entry.(map[string]interface{})["LastCheck"].(string))
+				assert.NoError(t, err)
+				assert.NotZero(t, lastCheck)
 			}
 		}
 		_ = resp.Body.Close()
