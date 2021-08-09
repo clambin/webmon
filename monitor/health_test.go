@@ -38,7 +38,10 @@ func TestMonitor_Health(t *testing.T) {
 		err := json.Unmarshal(body, &parsed)
 
 		if assert.NoError(t, err) {
-			entry, ok := parsed[testServer.URL]
+			assert.Equal(t, 1.0, parsed["count"].(float64))
+			assert.NotZero(t, parsed["last_update"].(string))
+			sites := parsed["sites"].(map[string]interface{})
+			entry, ok := sites[testServer.URL]
 			if assert.True(t, ok) {
 				assert.True(t, entry.(map[string]interface{})["Up"].(bool))
 				assert.NotZero(t, entry.(map[string]interface{})["CertificateAge"].(float64))

@@ -2,7 +2,6 @@ package monitor
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 )
 
@@ -35,14 +34,7 @@ func (d *Duration) UnmarshalJSON(b []byte) (err error) {
 	err = json.Unmarshal(b, &v)
 
 	if err == nil {
-		switch value := v.(type) {
-		// case float64:
-		//	d.Duration = time.Duration(value)
-		case string:
-			d.Duration, err = time.ParseDuration(value)
-		default:
-			err = fmt.Errorf("invalid duration: %v", value)
-		}
+		d.Duration, err = time.ParseDuration(v.(string))
 	}
 	return
 }
