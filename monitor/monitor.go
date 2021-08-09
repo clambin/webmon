@@ -74,6 +74,8 @@ func New(hosts []string) (monitor *Monitor) {
 // To be able to stop this function, call it with a context obtained by context.WithCancel()
 // and then call cancel() when required.
 func (monitor *Monitor) Run(ctx context.Context, interval time.Duration) (err error) {
+	log.Info("monitor started")
+
 	monitor.CheckSites(ctx)
 
 	ticker := time.NewTicker(interval)
@@ -91,6 +93,7 @@ func (monitor *Monitor) Run(ctx context.Context, interval time.Duration) (err er
 	}
 
 	ticker.Stop()
+	log.Info("monitor stopped")
 	return
 }
 

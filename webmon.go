@@ -4,6 +4,7 @@ import (
 	"context"
 	clientV1 "github.com/clambin/webmon/crds/targets/clientset/v1"
 	"github.com/clambin/webmon/monitor"
+	"github.com/clambin/webmon/utils"
 	"github.com/clambin/webmon/version"
 	"github.com/clambin/webmon/watcher"
 	"github.com/gorilla/mux"
@@ -32,7 +33,7 @@ var (
 )
 
 func main() {
-	a := kingpin.New(filepath.Base(os.Args[0]), "monitor")
+	a := kingpin.New(filepath.Base(os.Args[0]), "webmon")
 
 	a.Version(version.BuildVersion)
 	a.HelpFlag.Short('h')
@@ -56,7 +57,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	*hosts = monitor.Unique(*hosts)
+	*hosts = utils.Unique(*hosts)
 
 	if debug {
 		log.SetLevel(log.DebugLevel)
@@ -77,8 +78,6 @@ func main() {
 		}
 	}()
 
-	log.Info("monitor started")
-
 	if watch {
 		var w *watcher.Watcher
 		w, err = newWatcher(m, watchNamespace)
@@ -88,7 +87,6 @@ func main() {
 		}
 
 		go w.Run(ctx)
-		log.Info("watcher started")
 	}
 
 	go func() {
@@ -109,7 +107,7 @@ func main() {
 
 	cancel()
 	time.Sleep(500 * time.Millisecond)
-	log.Info("monitor stopped")
+	log.Info("webmon stopped")
 }
 
 func newWatcher(monitor *monitor.Monitor, namespace string) (w *watcher.Watcher, err error) {

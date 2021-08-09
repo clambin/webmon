@@ -35,38 +35,40 @@ func NewWithClient(register, unregister chan string, namespace string, client cl
 
 // Run checks kubernetes for created/removed URLs at the specified interval
 func (watcher *Watcher) Run(ctx context.Context) {
-	w, resultChan := watcher.watch(ctx)
+	log.Info("watcher started")
 
-	// k8s may stop sending events after 30m
+	w := watcher.watch(ctx)
+
+	// k8s may stop sending events after 30m, so we renew it periodically
 	ticker := time.NewTicker(30 * time.Minute)
 
 	for running := true; running; {
 		select {
 		case <-ctx.Done():
 			running = false
-		case event := <-resultChan:
+		case event := <-w.ResultChan():
 			watcher.processEvent(event)
 		case <-ticker.C:
-			// recreate the watch session to prevent timeouts
-			log.Debug("renewing custom resource watcher")
 			w.Stop()
-			w, resultChan = watcher.watch(ctx)
+			w = watcher.watch(ctx)
 			log.Debug("renewed custom resource watcher")
 		}
 	}
-	ticker.Stop()
+
 	w.Stop()
+	ticker.Stop()
+
+	log.Info("watcher stopped")
 }
 
-func (watcher *Watcher) watch(ctx context.Context) (w watch.Interface, ch <-chan watch.Event) {
+func (watcher *Watcher) watch(ctx context.Context) (w watch.Interface) {
 	var err error
 	w, err = watcher.Client.Targets(watcher.namespace).Watch(ctx, metav1.ListOptions{})
 
-	if err == nil {
-		ch = w.ResultChan()
-	} else {
+	if err != nil {
 		log.WithError(err).Fatal("failed to set up custom resource watcher")
 	}
+
 	return
 }
 

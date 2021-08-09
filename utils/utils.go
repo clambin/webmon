@@ -1,4 +1,4 @@
-package monitor
+package utils
 
 // Unique returns the list of unique strings
 func Unique(list []string) (unique []string) {
