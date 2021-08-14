@@ -35,7 +35,7 @@ type Monitor struct {
 func New(hosts []string) (monitor *Monitor) {
 	monitor = &Monitor{
 		HTTPClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: 30 * time.Second,
 			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 				return http.ErrUseLastResponse
 			},

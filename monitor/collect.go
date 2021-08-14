@@ -21,13 +21,13 @@ func (monitor *Monitor) Collect(ch chan<- prometheus.Metric) {
 
 	for name, entry := range monitor.sites {
 		if entry.LastCheck.IsZero() == false {
-			up := 0.0
 			if entry.Up {
-				up = 1.0
+				ch <- prometheus.MustNewConstMetric(monitor.metricUp, prometheus.GaugeValue, 1.0, name)
+				ch <- prometheus.MustNewConstMetric(monitor.metricLatency, prometheus.GaugeValue, entry.Latency.Seconds(), name)
+				ch <- prometheus.MustNewConstMetric(monitor.metricCertAge, prometheus.GaugeValue, entry.CertificateAge, name)
+			} else {
+				ch <- prometheus.MustNewConstMetric(monitor.metricUp, prometheus.GaugeValue, 0.0, name)
 			}
-			ch <- prometheus.MustNewConstMetric(monitor.metricUp, prometheus.GaugeValue, up, name)
-			ch <- prometheus.MustNewConstMetric(monitor.metricLatency, prometheus.GaugeValue, entry.Latency.Seconds(), name)
-			ch <- prometheus.MustNewConstMetric(monitor.metricCertAge, prometheus.GaugeValue, entry.CertificateAge, name)
 		}
 	}
 

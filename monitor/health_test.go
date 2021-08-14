@@ -43,12 +43,12 @@ func TestMonitor_Health(t *testing.T) {
 			sites := parsed["sites"].(map[string]interface{})
 			entry, ok := sites[testServer.URL]
 			if assert.True(t, ok) {
-				assert.True(t, entry.(map[string]interface{})["Up"].(bool))
-				assert.NotZero(t, entry.(map[string]interface{})["CertificateAge"].(float64))
-				assert.NotZero(t, entry.(map[string]interface{})["Latency"].(string))
+				assert.True(t, entry.(map[string]interface{})["up"].(bool))
+				assert.NotZero(t, entry.(map[string]interface{})["certificate_age"].(float64))
+				assert.NotZero(t, entry.(map[string]interface{})["latency"].(string))
 
 				var lastCheck time.Time
-				lastCheck, err = time.Parse(time.RFC3339, entry.(map[string]interface{})["LastCheck"].(string))
+				lastCheck, err = time.Parse(time.RFC3339, entry.(map[string]interface{})["last_check"].(string))
 				assert.NoError(t, err)
 				assert.NotZero(t, lastCheck)
 			}

@@ -138,9 +138,13 @@ func TestCollector_Collect_StatusCodes(t *testing.T) {
 			go m.Collect(ch)
 
 			metric := <-ch
-			_ = <-ch
-			_ = <-ch
-			return metricValue(metric).GetGauge().GetValue() == testCase.up
+			up := metricValue(metric).GetGauge().GetValue()
+
+			if up == 1.0 {
+				_ = <-ch
+				_ = <-ch
+			}
+			return up == testCase.up
 		}, 500*time.Millisecond, 10*time.Millisecond)
 	}
 }

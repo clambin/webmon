@@ -8,14 +8,18 @@ import (
 // The Entry structure holds the attributes that will be checked
 type Entry struct {
 	// Up indicates if the site is up or down
-	Up bool
+	Up bool `json:"up"`
+	// LastError is the last error received when checking the site
+	LastError string `json:"last_error,omitempty"`
+	// HTTPCode is the last HTTP Code received when checking the site
+	HTTPCode int `json:"http_code,omitempty"`
 	// CertificateAge contains the number of days that the site's TLS certificate is still valid
 	// For HTTP sites, this will be zero.
-	CertificateAge float64
+	CertificateAge float64 `json:"certificate_age,omitempty"`
 	// Latency contains the time it took to check the site
-	Latency Duration
+	Latency Duration `json:"latency,omitempty"`
 	// LastCheck is the timestamp the site was last checked. Before there first check, this is zero
-	LastCheck time.Time
+	LastCheck time.Time `json:"last_check,omitempty"`
 }
 
 // Duration datatype. Equivalent to time.Duration, but allows us to marshal/unmarshal Entry data structure to/from json

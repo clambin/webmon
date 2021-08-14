@@ -19,15 +19,15 @@ func TestEntry_Marshal(t *testing.T) {
 	out, err := json.Marshal(&entry)
 
 	assert.NoError(t, err)
-	assert.Equal(t, `{"Up":true,"CertificateAge":52,"Latency":"1.25s","LastCheck":"2021-08-09T15:30:00Z"}`, string(out))
+	assert.Equal(t, `{"up":true,"certificate_age":52,"latency":"1.25s","last_check":"2021-08-09T15:30:00Z"}`, string(out))
 }
 
 func TestEntry_Unmarshal(t *testing.T) {
 	input := []byte(`{
-	"Up": true,
-    "CertificateAge": 7.0,
-	"Latency": "250ms",
-    "LastCheck": "2021-08-09T15:30:00Z"
+	"up": true,
+    "certificate_age": 7.0,
+	"latency": "250ms",
+    "last_check": "2021-08-09T15:30:00Z"
 }`)
 
 	var output monitor.Entry

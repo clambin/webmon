@@ -47,6 +47,7 @@ func (monitor *Monitor) checkSite(ctx context.Context, site string) (entry Entry
 		resp, err = monitor.HTTPClient.Do(req)
 
 		if err == nil {
+			entry.HTTPCode = resp.StatusCode
 			entry.Up = validStatusCode(resp.StatusCode)
 			entry.Latency = Duration{Duration: time.Now().Sub(start)}
 
@@ -55,6 +56,8 @@ func (monitor *Monitor) checkSite(ctx context.Context, site string) (entry Entry
 			}
 
 			_ = resp.Body.Close()
+		} else {
+			entry.LastError = err.Error()
 		}
 	}
 
