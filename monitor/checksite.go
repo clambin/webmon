@@ -39,27 +39,25 @@ func (monitor *Monitor) CheckSites(ctx context.Context) {
 func (monitor *Monitor) checkSite(ctx context.Context, site string) (entry Entry) {
 	log.WithField("site", site).Debug("checking site")
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, site, nil)
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, site, nil)
 
-	if err == nil {
-		var resp *http.Response
-		start := time.Now()
-		resp, err = monitor.HTTPClient.Do(req)
+	start := time.Now()
+	resp, err := monitor.HTTPClient.Do(req)
 
-		if err == nil {
-			entry.HTTPCode = resp.StatusCode
-			entry.Up = validStatusCode(resp.StatusCode)
-			entry.Latency = Duration{Duration: time.Now().Sub(start)}
-
-			if resp.TLS != nil && len(resp.TLS.PeerCertificates) > 0 {
-				entry.CertificateAge = resp.TLS.PeerCertificates[0].NotAfter.Sub(time.Now()).Hours() / 24
-			}
-
-			_ = resp.Body.Close()
-		} else {
-			entry.LastError = err.Error()
-		}
+	if err != nil {
+		entry.LastError = err.Error()
+		return
 	}
+
+	entry.HTTPCode = resp.StatusCode
+	entry.Up = validStatusCode(resp.StatusCode)
+	entry.Latency = Duration{Duration: time.Now().Sub(start)}
+
+	if resp.TLS != nil && len(resp.TLS.PeerCertificates) > 0 {
+		entry.CertificateAge = resp.TLS.PeerCertificates[0].NotAfter.Sub(time.Now()).Hours() / 24
+	}
+
+	_ = resp.Body.Close()
 
 	entry.LastCheck = time.Now()
 

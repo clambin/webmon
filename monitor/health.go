@@ -32,11 +32,6 @@ func (monitor *Monitor) Health(w http.ResponseWriter, _ *http.Request) {
 		Sites:      sites,
 	}
 
-	out, err := json.MarshalIndent(&health, "", "  ")
-
-	if err == nil {
-		_, _ = w.Write(out)
-	} else {
-		http.Error(w, "unable to create response: "+err.Error(), http.StatusInternalServerError)
-	}
+	out, _ := json.MarshalIndent(&health, "", "  ")
+	_, _ = w.Write(out)
 }
