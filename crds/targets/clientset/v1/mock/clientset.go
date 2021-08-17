@@ -30,16 +30,14 @@ func (client *Client) Targets(_ string) v1.TargetCRDInterface {
 }
 
 // Add test function.  Creates a watcher event indicating a customer resource has been added.
-func (client *Client) Add(namespace, name, url string) {
+func (client *Client) Add(namespace, name string, spec typesV1.TargetSpec) {
 	client.Handler.watch.Add(&typesV1.Target{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: typesV1.TargetSpec{
-			URL: url,
-		},
+		Spec: spec,
 	})
 }
 
@@ -51,23 +49,19 @@ func (client *Client) Delete(namespace, name string) {
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: typesV1.TargetSpec{
-			URL: "",
-		},
+		Spec: typesV1.TargetSpec{},
 	})
 }
 
 // Modify test function.  Creates a watcher event indicating a customer resource has been modified.
-func (client *Client) Modify(namespace, name, url string) {
+func (client *Client) Modify(namespace, name string, spec typesV1.TargetSpec) {
 	client.Handler.watch.Modify(&typesV1.Target{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: typesV1.TargetSpec{
-			URL: url,
-		},
+		Spec: spec,
 	})
 }
 

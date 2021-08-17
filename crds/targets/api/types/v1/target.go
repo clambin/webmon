@@ -21,6 +21,8 @@ import (
 type TargetSpec struct {
 	// URL of the site to monitor
 	URL string `json:"url"`
+	// Name of the site to monitor. Applied to Prometheus metrics
+	Name string `json:"name"`
 }
 
 // Target layout for the custom resource

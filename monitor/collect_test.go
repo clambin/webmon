@@ -52,9 +52,10 @@ func TestCollector_Collect(t *testing.T) {
 	ch := make(chan prometheus.Metric)
 	go m.Collect(ch)
 
-	// TODO: check labels
 	metric := <-ch
 	assert.Equal(t, 1.0, metricValue(metric).GetGauge().GetValue())
+	assert.Equal(t, testServer.URL, metricLabel(metric, "site_url"))
+	assert.Equal(t, testServer.URL, metricLabel(metric, "site_name"))
 	metric = <-ch
 	assert.NotZero(t, metricValue(metric).GetGauge().GetValue())
 	metric = <-ch
@@ -114,11 +115,6 @@ func TestCollector_Collect_StatusCodes(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go func() {
-		err2 := m.Run(ctx, 10*time.Millisecond)
-		assert.NoError(t, err2)
-	}()
-
 	type testCaseStruct struct {
 		statusCode int
 		up         float64
@@ -133,19 +129,15 @@ func TestCollector_Collect_StatusCodes(t *testing.T) {
 	for _, testCase := range testCases {
 		stub.StatusCode(testCase.statusCode)
 
-		assert.Eventually(t, func() bool {
-			ch := make(chan prometheus.Metric)
-			go m.Collect(ch)
+		m.CheckSites(ctx)
 
-			metric := <-ch
-			up := metricValue(metric).GetGauge().GetValue()
+		// use a buffered channel so Collect doesn't block when we don't read all metrics
+		ch := make(chan prometheus.Metric, 3)
+		go m.Collect(ch)
 
-			if up == 1.0 {
-				_ = <-ch
-				_ = <-ch
-			}
-			return up == testCase.up
-		}, 500*time.Millisecond, 10*time.Millisecond)
+		up := metricValue(<-ch).GetGauge().GetValue()
+
+		assert.Equal(t, testCase.up, up)
 	}
 }
 
@@ -161,7 +153,7 @@ func BenchmarkMonitor_CheckSites(b *testing.B) {
 	ctx := context.Background()
 	b.ResetTimer()
 
-	for i := 0; i < 5000; i++ {
+	for i := 0; i < 1000; i++ {
 		m.CheckSites(ctx)
 	}
 }
@@ -222,4 +214,21 @@ func metricValue(metric prometheus.Metric) *pcg.Metric {
 	}
 
 	return m
+}
+
+// metricLabel returns the value for a specified label
+func metricLabel(metric prometheus.Metric, labelName string) string {
+	var m pcg.Metric
+
+	if metric.Write(&m) != nil {
+		panic("failed to parse metric")
+	}
+
+	for _, label := range m.GetLabel() {
+		if label.GetName() == labelName {
+			return label.GetValue()
+		}
+	}
+
+	return ""
 }

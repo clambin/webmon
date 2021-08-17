@@ -19,24 +19,26 @@ func (monitor *Monitor) CheckSites(ctx context.Context) {
 	}
 	maxJobs := semaphore.NewWeighted(monitor.MaxConcurrentChecks)
 
-	responses := make(map[string]chan Entry)
+	responses := make(map[string]chan *SiteState)
 	for site := range monitor.sites {
-		responses[site] = make(chan Entry)
+		responses[site] = make(chan *SiteState)
 
 		_ = maxJobs.Acquire(ctx, 1)
-		go func(ch chan Entry, site string) {
-			entry := monitor.checkSite(ctx, site)
+		go func(ch chan *SiteState, site string) {
+			state := monitor.checkSite(ctx, site)
 			maxJobs.Release(1)
-			ch <- entry
+			ch <- state
 		}(responses[site], site)
 	}
 
 	for site, ch := range responses {
-		monitor.sites[site] = <-ch
+		entry, _ := monitor.sites[site]
+		entry.State = <-ch
+		monitor.sites[site] = entry
 	}
 }
 
-func (monitor *Monitor) checkSite(ctx context.Context, site string) (entry Entry) {
+func (monitor *Monitor) checkSite(ctx context.Context, site string) (state *SiteState) {
 	log.WithField("site", site).Debug("checking site")
 
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, site, nil)
@@ -44,40 +46,42 @@ func (monitor *Monitor) checkSite(ctx context.Context, site string) (entry Entry
 	start := time.Now()
 	resp, err := monitor.HTTPClient.Do(req)
 
+	state = &SiteState{}
 	if err != nil {
-		entry.LastError = err.Error()
+		state.LastError = err.Error()
 		return
 	}
 
-	entry.HTTPCode = resp.StatusCode
-	entry.Up = validStatusCode(resp.StatusCode)
-	entry.Latency = Duration{Duration: time.Now().Sub(start)}
+	state.HTTPCode = resp.StatusCode
+	state.Up = goodStatusCode(resp.StatusCode)
+	state.Latency = Duration{Duration: time.Now().Sub(start)}
 
 	if resp.TLS != nil && len(resp.TLS.PeerCertificates) > 0 {
-		entry.CertificateAge = resp.TLS.PeerCertificates[0].NotAfter.Sub(time.Now()).Hours() / 24
+		state.CertificateAge = resp.TLS.PeerCertificates[0].NotAfter.Sub(time.Now()).Hours() / 24
 	}
 
 	_ = resp.Body.Close()
 
-	entry.LastCheck = time.Now()
+	state.LastCheck = time.Now()
 
 	log.WithError(err).WithFields(log.Fields{
 		"site":    site,
-		"up":      entry.Up,
-		"certAge": entry.CertificateAge,
-		"latency": entry.Latency,
+		"up":      state.Up,
+		"certAge": state.CertificateAge,
+		"latency": state.Latency,
 	}).Debug("checkSite")
 	return
 }
 
-var validHTTPStatusCodes = []int{
+var goodHTTPStatusCodes = []int{
 	http.StatusOK,
 	http.StatusUnauthorized,
 	http.StatusTemporaryRedirect,
+	http.StatusFound,
 }
 
-func validStatusCode(statusCode int) bool {
-	for _, code := range validHTTPStatusCodes {
+func goodStatusCode(statusCode int) bool {
+	for _, code := range goodHTTPStatusCodes {
 		if statusCode == code {
 			return true
 		}

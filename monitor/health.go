@@ -11,14 +11,10 @@ func (monitor *Monitor) Health(w http.ResponseWriter, _ *http.Request) {
 	monitor.lock.RLock()
 	defer monitor.lock.RUnlock()
 
-	sites := make(map[string]Entry)
 	var lastUpdate time.Time
-	for url, entry := range monitor.sites {
-		if entry.LastCheck.IsZero() == false {
-			sites[url] = entry
-			if entry.LastCheck.After(lastUpdate) {
-				lastUpdate = entry.LastCheck
-			}
+	for _, entry := range monitor.sites {
+		if entry.State != nil && entry.State.LastCheck.After(lastUpdate) {
+			lastUpdate = entry.State.LastCheck
 		}
 	}
 
@@ -29,7 +25,7 @@ func (monitor *Monitor) Health(w http.ResponseWriter, _ *http.Request) {
 	}{
 		Count:      len(monitor.sites),
 		LastUpdate: lastUpdate,
-		Sites:      sites,
+		Sites:      monitor.sites,
 	}
 
 	out, _ := json.MarshalIndent(&health, "", "  ")

@@ -2,7 +2,9 @@ package watcher_test
 
 import (
 	"context"
+	v1 "github.com/clambin/webmon/crds/targets/api/types/v1"
 	"github.com/clambin/webmon/crds/targets/clientset/v1/mock"
+	"github.com/clambin/webmon/monitor"
 	"github.com/clambin/webmon/watcher"
 	"github.com/stretchr/testify/assert"
 	"sync"
@@ -12,8 +14,8 @@ import (
 func TestWatcher_Run(t *testing.T) {
 	client := mock.New()
 
-	register := make(chan string)
-	unregister := make(chan string)
+	register := make(chan monitor.SiteSpec)
+	unregister := make(chan monitor.SiteSpec)
 
 	w := watcher.NewWithClient(register, unregister, "", client)
 
@@ -26,19 +28,19 @@ func TestWatcher_Run(t *testing.T) {
 		wg.Done()
 	}()
 
-	client.Add("foo", "bar", "https://example.com")
-	url := <-register
-	assert.Equal(t, "https://example.com", url)
+	client.Add("foo", "bar", v1.TargetSpec{URL: "https://example.com"})
+	site := <-register
+	assert.Equal(t, "https://example.com", site.URL)
 
-	client.Modify("foo", "bar", "https://example.com:443")
-	url = <-unregister
-	assert.Equal(t, "https://example.com", url)
-	url = <-register
-	assert.Equal(t, "https://example.com:443", url)
+	client.Modify("foo", "bar", v1.TargetSpec{URL: "https://example.com:443"})
+	site = <-unregister
+	assert.Equal(t, "https://example.com", site.URL)
+	site = <-register
+	assert.Equal(t, "https://example.com:443", site.URL)
 
 	client.Delete("foo", "bar")
-	url = <-unregister
-	assert.Equal(t, "https://example.com:443", url)
+	site = <-unregister
+	assert.Equal(t, "https://example.com:443", site.URL)
 
 	cancel()
 

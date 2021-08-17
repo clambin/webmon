@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -65,28 +66,40 @@ func main() {
 
 	log.WithField("hosts", *hosts).Infof("monitor %s", version.BuildVersion)
 
-	var m *monitor.Monitor
-	m = monitor.New(*hosts)
-	prometheus.MustRegister(m)
+	myMonitor := monitor.New(nil)
+	prometheus.MustRegister(myMonitor)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// run the monitor
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
-		err2 := m.Run(ctx, interval)
+		err2 := myMonitor.Run(ctx, interval)
 		if err2 != nil {
 			log.WithError(err2).Fatal("could not start monitor")
 		}
+		wg.Done()
 	}()
 
+	// Register hosts
+	for _, host := range *hosts {
+		myMonitor.Register <- monitor.SiteSpec{URL: host}
+	}
+
 	if watch {
-		var w *watcher.Watcher
-		w, err = newWatcher(m, watchNamespace)
+		var myWatcher *watcher.Watcher
+		myWatcher, err = newWatcher(myMonitor, watchNamespace)
 
 		if err != nil {
 			log.WithError(err).Fatal("unable to start watcher")
 		}
 
-		go w.Run(ctx)
+		wg.Add(1)
+		go func() {
+			myWatcher.Run(ctx)
+			wg.Done()
+		}()
 	}
 
 	go func() {
@@ -94,7 +107,7 @@ func main() {
 		r := mux.NewRouter()
 		r.Use(prometheusMiddleware)
 		r.Path("/metrics").Handler(promhttp.Handler())
-		r.Path("/health").Handler(http.HandlerFunc(m.Health))
+		r.Path("/health").Handler(http.HandlerFunc(myMonitor.Health))
 		err = http.ListenAndServe(listenAddress, r)
 		if err != nil {
 			log.WithError(err).Fatal("unable to start metrics server")
@@ -106,7 +119,7 @@ func main() {
 	<-sigs
 
 	cancel()
-	time.Sleep(500 * time.Millisecond)
+	wg.Wait()
 	log.Info("webmon stopped")
 }
 

@@ -5,8 +5,24 @@ import (
 	"time"
 )
 
-// The Entry structure holds the attributes that will be checked
+// The Entry structure holds all information on one host to be checked
 type Entry struct {
+	// Spec contains the site's specification. See SiteSpec
+	Spec SiteSpec `json:"spec"`
+	// State contains the site's state. See SiteState
+	State *SiteState `json:"state,omitempty"`
+}
+
+// A SiteSpec to monitor
+type SiteSpec struct {
+	// URL of the site
+	URL string `json:"url"`
+	// Name of the site
+	Name string `json:"name,omitempty"`
+}
+
+// The SiteState structure holds the attributes that will be checked
+type SiteState struct {
 	// Up indicates if the site is up or down
 	Up bool `json:"up"`
 	// LastError is the last error received when checking the site

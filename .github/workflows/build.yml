@@ -7,7 +7,7 @@ on:
     branches:
       - master
       - refactor
-      - codegen
+      - name
 jobs:
   test:
     runs-on: ubuntu-latest

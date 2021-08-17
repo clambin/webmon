@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"github.com/clambin/webmon/monitor"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 )
 
 func TestMonitor_Health(t *testing.T) {
@@ -31,28 +31,29 @@ func TestMonitor_Health(t *testing.T) {
 	m.Health(w, &http.Request{})
 	resp = w.Result()
 
-	if assert.Equal(t, http.StatusOK, resp.StatusCode) {
-		body, _ := io.ReadAll(resp.Body)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	body, _ := io.ReadAll(resp.Body)
 
-		var parsed map[string]interface{}
-		err := json.Unmarshal(body, &parsed)
+	var parsed map[string]interface{}
+	err := json.Unmarshal(body, &parsed)
+	require.NoError(t, err)
 
-		if assert.NoError(t, err) {
-			assert.Equal(t, 1.0, parsed["count"].(float64))
-			assert.NotZero(t, parsed["last_update"].(string))
-			sites := parsed["sites"].(map[string]interface{})
-			entry, ok := sites[testServer.URL]
-			if assert.True(t, ok) {
-				assert.True(t, entry.(map[string]interface{})["up"].(bool))
-				assert.NotZero(t, entry.(map[string]interface{})["certificate_age"].(float64))
-				assert.NotZero(t, entry.(map[string]interface{})["latency"].(string))
+	assert.Equal(t, 1.0, parsed["count"].(float64))
+	assert.NotZero(t, parsed["last_update"].(string))
 
-				var lastCheck time.Time
-				lastCheck, err = time.Parse(time.RFC3339, entry.(map[string]interface{})["last_check"].(string))
-				assert.NoError(t, err)
-				assert.NotZero(t, lastCheck)
-			}
-		}
-		_ = resp.Body.Close()
-	}
+	sites := parsed["sites"].(map[string]interface{})
+	entry, ok := sites[testServer.URL]
+	require.True(t, ok)
+
+	spec := entry.(map[string]interface{})["spec"].(map[string]interface{})
+	assert.Equal(t, testServer.URL, spec["url"].(string))
+
+	state := entry.(map[string]interface{})["state"].(map[string]interface{})
+	assert.True(t, state["up"].(bool))
+	assert.NotZero(t, state["certificate_age"].(float64))
+	assert.NotZero(t, state["latency"].(string))
+	assert.NotZero(t, state["last_check"].(string))
+
+	_ = resp.Body.Close()
+
 }
