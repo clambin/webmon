@@ -7,7 +7,7 @@ on:
     branches:
       - master
       - refactor
-      - name
+      - fix
 jobs:
   test:
     runs-on: ubuntu-latest

@@ -30,6 +30,8 @@ type SiteState struct {
 	// HTTPCode is the last HTTP Code received when checking the site
 	HTTPCode int `json:"http_code,omitempty"`
 	// CertificateAge contains the number of days that the site's TLS certificate is still valid
+	// IsTLS indicates the site is using encryption (i.e. TLS)
+	IsTLS bool `json:"is_tls"`
 	// For HTTP sites, this will be zero.
 	CertificateAge float64 `json:"certificate_age,omitempty"`
 	// Latency contains the time it took to check the site

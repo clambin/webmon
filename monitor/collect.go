@@ -28,7 +28,9 @@ func (monitor *Monitor) Collect(ch chan<- prometheus.Metric) {
 			if entry.State.Up {
 				ch <- prometheus.MustNewConstMetric(monitor.metricUp, prometheus.GaugeValue, 1.0, url, name)
 				ch <- prometheus.MustNewConstMetric(monitor.metricLatency, prometheus.GaugeValue, entry.State.Latency.Seconds(), url, name)
-				ch <- prometheus.MustNewConstMetric(monitor.metricCertAge, prometheus.GaugeValue, entry.State.CertificateAge, url, name)
+				if entry.State.IsTLS {
+					ch <- prometheus.MustNewConstMetric(monitor.metricCertAge, prometheus.GaugeValue, entry.State.CertificateAge, url, name)
+				}
 			} else {
 				ch <- prometheus.MustNewConstMetric(monitor.metricUp, prometheus.GaugeValue, 0.0, url, name)
 			}

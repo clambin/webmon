@@ -58,8 +58,8 @@ func TestCollector_Collect(t *testing.T) {
 	assert.Equal(t, testServer.URL, metricLabel(metric, "site_name"))
 	metric = <-ch
 	assert.NotZero(t, metricValue(metric).GetGauge().GetValue())
-	metric = <-ch
-	assert.Zero(t, metricValue(metric).GetGauge().GetValue())
+	// metric = <-ch
+	// assert.Zero(t, metricValue(metric).GetGauge().GetValue())
 
 	cancel()
 
