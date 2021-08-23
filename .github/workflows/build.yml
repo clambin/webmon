@@ -4,6 +4,7 @@ on:
   push:
     paths-ignore:
       - README.md
+      - asserts/grafana/dashboards/webmon.json
     branches:
       - master
       - refactor

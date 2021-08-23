@@ -8,6 +8,12 @@
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
@@ -16,7 +22,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 465,
-  "iteration": 1628336309036,
+  "iteration": 1629747857958,
   "links": [],
   "panels": [
     {
@@ -31,12 +37,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "semi-dark-red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "semi-dark-green",
+                "value": 1
               }
             ]
           }
@@ -63,13 +69,13 @@
           "values": false
         },
         "text": {},
-        "textMode": "auto"
+        "textMode": "name"
       },
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "8.1.2",
       "targets": [
         {
           "exemplar": true,
-          "expr": "avg by (site_url) (webmon_site_up)",
+          "expr": "avg by (site_name) (webmon_site_up{site_name!=\"\"})",
           "interval": "",
           "legendFormat": "{{site_url}}",
           "queryType": "randomWalk",
@@ -142,7 +148,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "last"
           ],
           "fields": "",
           "values": false
@@ -150,7 +156,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "8.1.2",
       "targets": [
         {
           "exemplar": true,
@@ -173,10 +179,10 @@
           },
           "custom": {
             "axisLabel": "",
-            "axisPlacement": "auto",
+            "axisPlacement": "hidden",
             "barAlignment": 0,
             "drawStyle": "bars",
-            "fillOpacity": 0,
+            "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -189,8 +195,8 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
-            "spanNulls": false,
+            "showPoints": "never",
+            "spanNulls": true,
             "stacking": {
               "group": "A",
               "mode": "none"
@@ -204,32 +210,18 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "semi-dark-red",
+                "color": "green",
                 "value": null
               },
               {
-                "color": "semi-dark-green",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Value"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "light-red",
-                  "mode": "fixed"
-                }
+                "color": "red",
+                "value": 80
               }
             ]
           },
+          "unit": "short"
+        },
+        "overrides": [
           {
             "matcher": {
               "id": "byName",
@@ -257,14 +249,14 @@
       "options": {
         "legend": {
           "calcs": [],
-          "displayMode": "hidden",
+          "displayMode": "list",
           "placement": "bottom"
         },
         "tooltip": {
           "mode": "single"
         }
       },
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "8.1.0",
       "targets": [
         {
           "exemplar": true,
@@ -284,6 +276,8 @@
           "refId": "B"
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "Site availability",
       "type": "timeseries"
     },
@@ -371,7 +365,7 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "5m",
+  "refresh": false,
   "schemaVersion": 30,
   "style": "dark",
   "tags": [],
@@ -407,12 +401,12 @@
     ]
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "sites",
   "uid": "nGIZXpGnk",
-  "version": 16
+  "version": 39
 }
