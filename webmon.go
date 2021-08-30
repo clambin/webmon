@@ -2,15 +2,13 @@ package main
 
 import (
 	"context"
+	"github.com/clambin/gotools/metrics"
 	clientV1 "github.com/clambin/webmon/crds/targets/clientset/v1"
 	"github.com/clambin/webmon/monitor"
 	"github.com/clambin/webmon/utils"
 	"github.com/clambin/webmon/version"
 	"github.com/clambin/webmon/watcher"
-	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"k8s.io/client-go/rest"
@@ -102,15 +100,13 @@ func main() {
 		}()
 	}
 
-	r := mux.NewRouter()
-	r.Use(prometheusMiddleware)
-	r.Path("/metrics").Handler(promhttp.Handler())
-	r.Path("/health").Handler(http.HandlerFunc(myMonitor.Health))
-	promServer := http.Server{Addr: ":8080", Handler: r}
+	promServer := metrics.NewServerWithHandlers(8080, []metrics.Handler{
+		{Path: "/health", Handler: http.HandlerFunc(myMonitor.Health)},
+	})
 
 	go func() {
 		log.Info("prometheus metrics server started")
-		err2 := promServer.ListenAndServe()
+		err2 := promServer.Run()
 		if err2 != http.ErrServerClosed {
 			log.WithError(err2).Fatal("unable to start metrics server")
 		}
@@ -121,11 +117,9 @@ func main() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	<-sigs
 
+	_ = promServer.Shutdown(30 * time.Second)
 	cancel()
 	wg.Wait()
-	ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	_ = promServer.Shutdown(ctx)
 	log.Info("webmon stopped")
 }
 
@@ -149,23 +143,4 @@ func newWatcher(monitor *monitor.Monitor, namespace string) (w *watcher.Watcher,
 	}
 
 	return watcher.NewWithClient(monitor.Register, monitor.Unregister, namespace, client), nil
-}
-
-// Prometheus metrics
-var (
-	httpDuration = promauto.NewSummaryVec(prometheus.SummaryOpts{
-		Name: "http_duration_seconds",
-		Help: "Duration of HTTP requests",
-	}, []string{"path"})
-)
-
-// prometheusMiddleware measures the time it takes to perform a /metric call
-func prometheusMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		route := mux.CurrentRoute(r)
-		path, _ := route.GetPathTemplate()
-		timer := prometheus.NewTimer(httpDuration.WithLabelValues(path))
-		next.ServeHTTP(w, r)
-		timer.ObserveDuration()
-	})
 }
