@@ -7,8 +7,6 @@ on:
       - asserts/grafana/dashboards/webmon.json
     branches:
       - master
-      - refactor
-      - fix
 jobs:
   test:
     runs-on: ubuntu-latest
