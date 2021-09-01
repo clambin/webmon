@@ -2,7 +2,6 @@ package monitor
 
 import (
 	"context"
-	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"sync"
@@ -25,11 +24,8 @@ type Monitor struct {
 	// MaxConcurrentChecks limits the number of sites that are checked in parallel. Default: DefaultMaxConcurrentChecks
 	MaxConcurrentChecks int64
 
-	sites         map[string]Entry
-	lock          sync.RWMutex
-	metricUp      *prometheus.Desc
-	metricLatency *prometheus.Desc
-	metricCertAge *prometheus.Desc
+	sites map[string]Entry
+	lock  sync.RWMutex
 }
 
 // New creates a new Monitor instance for the specified list of sites
@@ -44,24 +40,6 @@ func New(hosts []string) (monitor *Monitor) {
 		Register:   make(chan SiteSpec),
 		Unregister: make(chan SiteSpec),
 		sites:      make(map[string]Entry),
-		metricUp: prometheus.NewDesc(
-			prometheus.BuildFQName("webmon", "site", "up"),
-			"Set to 1 if the site is up",
-			[]string{"site_url", "site_name"},
-			nil,
-		),
-		metricLatency: prometheus.NewDesc(
-			prometheus.BuildFQName("webmon", "site", "latency_seconds"),
-			"Time to check the site, in seconds",
-			[]string{"site_url", "site_name"},
-			nil,
-		),
-		metricCertAge: prometheus.NewDesc(
-			prometheus.BuildFQName("webmon", "certificate", "expiry"),
-			"Number of days before the HTTPS certificate expires",
-			[]string{"site_url", "site_name"},
-			nil,
-		),
 	}
 
 	for _, host := range hosts {
